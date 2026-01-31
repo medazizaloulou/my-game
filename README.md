@@ -33,19 +33,19 @@ body {
 
 <script>
 let score = 0;
-let speed = 1000;
+let speed = 500;
 let box = document.getElementById("box");
 
 function startGame() {
   score = 0;
-  speed = 1000;
+  speed = 500;
   document.getElementById("score").innerText = "النقاط: 0";
   showBox();
 }
 
 function showBox() {
-  let x = Math.random() * (window.innerWidth - 100);
-  let y = Math.random() * (window.innerHeight - 100);
+  let x = Math.random() * (window.innerWidth - 70);
+  let y = Math.random() * (window.innerHeight - 70);
 
   box.style.left = x + "px";
   box.style.top = y + "px";
@@ -54,7 +54,7 @@ function showBox() {
   setTimeout(() => {
     box.style.display = "none";
     speed -= 50;
-    if (speed < 300) speed = 300;
+    if (speed < 150) speed = 150;
     showBox();
   }, speed);
 }
