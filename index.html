@@ -14,10 +14,33 @@ body {
 #box {
   width: 80px;
   height: 80px;
-  background: rgb(229, 255, 0);
+  background: red;
   position: absolute;
   display: none;
   cursor: pointer;
+  border-radius: 10px;
+}
+
+button {
+  margin: 5px;
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+#timeBarContainer {
+  width: 80%;
+  height: 20px;
+  background: #ddd;
+  margin: 10px auto;
+  border-radius: 10px;
+}
+
+#timeBar {
+  height: 100%;
+  width: 100%;
+  background: red;
+  border-radius: 10px;
 }
 </style>
 </head>
@@ -26,23 +49,66 @@ body {
 
 <h1>🎮 العب فورًا</h1>
 <p id="score">النقاط: 0</p>
-<button onclick="startGame()">ابدأ اللعبة</button>
+<p id="timer">الوقت: 30</p>
+
+<div id="timeBarContainer">
+  <div id="timeBar"></div>
+</div>
+
+<button id="startBtn">ابدأ اللعبة</button>
+<button id="restartBtn" style="display:none;">إعادة اللعب</button>
 
 <div id="box"></div>
 
 <script>
 let score = 0;
-let speed = 100;
+let speed = 1000;
 let box = document.getElementById("box");
+let timeLeft = 30;
+let totalTime = 30;
+let timerInterval;
+let gameRunning = false;
+let timeBar = document.getElementById("timeBar");
 
 function startGame() {
   score = 0;
-  speed = 100;
+  speed = 1000;
+  timeLeft = totalTime;
+  gameRunning = true;
+
   document.getElementById("score").innerText = "النقاط: 0";
+  document.getElementById("timer").innerText = "الوقت: " + timeLeft;
+  timeBar.style.width = "100%";
+
+  document.getElementById("startBtn").style.display = "none";
+  document.getElementById("restartBtn").style.display = "inline-block";
+
+  clearInterval(timerInterval);
+
+  timerInterval = setInterval(() => {
+    if (!gameRunning) return;
+    timeLeft--;
+    document.getElementById("timer").innerText = "الوقت: " + timeLeft;
+    timeBar.style.width = (timeLeft / totalTime * 100) + "%";
+    if (timeLeft <= 0) {
+      endGame();
+    }
+  }, 1000);
+
   showBox();
 }
 
+function endGame() {
+  gameRunning = false;
+  gameRunning = false;
+  box.style.display = "none";
+  clearInterval(timerInterval);
+  alert("انتهى الوقت! نقاطك: " + score);
+}
+
 function showBox() {
+  if (!gameRunning) return;
+
   let x = Math.random() * (window.innerWidth - 100);
   let y = Math.random() * (window.innerHeight - 100);
 
@@ -52,16 +118,20 @@ function showBox() {
 
   setTimeout(() => {
     box.style.display = "none";
-    speed -= 50;
+    speed -= 0.95;
     if (speed < 500) speed = 500;
     showBox();
   }, speed);
 }
 
 box.onclick = function () {
+  if (!gameRunning) return;
   score++;
   document.getElementById("score").innerText = "النقاط: " + score;
 };
+
+document.getElementById("startBtn").onclick = startGame;
+document.getElementById("restartBtn").onclick = startGame;
 </script>
 
 </body>
