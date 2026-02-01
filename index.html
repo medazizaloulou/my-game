@@ -9,6 +9,8 @@ body {
   font-family: Arial;
   text-align: center;
   background: #f2f2f2;
+  margin: 0;
+  overflow: hidden;
 }
 
 #box {
@@ -57,22 +59,49 @@ button {
 
 <button id="startBtn">ابدأ اللعبة</button>
 <button id="restartBtn" style="display:none;">إعادة اللعب</button>
+<button id="stopBtn">إيقاف اللعبة</button>
+
 
 <div id="box"></div>
 
 <script>
+// ===== الأصوات =====
+let clickSound = new Audio("click.mp3");
+clickSound.preload = "auto";
+
+let startSound = new Audio("start.mp3");
+startSound.preload = "auto";
+
+// ===== متغيرات اللعبة =====
 let score = 0;
-let speed = 1000;
-let box = document.getElementById("box");
+let speed = 1500; // سرعة أسهل للمربع
 let timeLeft = 30;
 let totalTime = 30;
-let timerInterval;
 let gameRunning = false;
+let timerInterval;
+let boxTimeout;
+
+let box = document.getElementById("box");
 let timeBar = document.getElementById("timeBar");
 
+// ===== بدء اللعبة بعد صوت البداية (4 ثواني) =====
+function startWithSound() {
+  document.getElementById("startBtn").style.display = "none";
+
+  // 🔊 شغل صوت البداية
+  startSound.currentTime = 0;
+  startSound.play();
+
+  // 🕒 انتظر 4 ثواني قبل بدء اللعبة
+  setTimeout(() => {
+    startGame();
+  }, 4000); // التأخير 4 ثواني
+}
+
+// ===== بدء اللعبة =====
 function startGame() {
   score = 0;
-  speed = 1000;
+  speed = 1500; // سرعة المربع
   timeLeft = totalTime;
   gameRunning = true;
 
@@ -80,7 +109,6 @@ function startGame() {
   document.getElementById("timer").innerText = "الوقت: " + timeLeft;
   timeBar.style.width = "100%";
 
-  document.getElementById("startBtn").style.display = "none";
   document.getElementById("restartBtn").style.display = "inline-block";
 
   clearInterval(timerInterval);
@@ -90,49 +118,79 @@ function startGame() {
     timeLeft--;
     document.getElementById("timer").innerText = "الوقت: " + timeLeft;
     timeBar.style.width = (timeLeft / totalTime * 100) + "%";
-    if (timeLeft <= 0) {
-      endGame();
-    }
+
+    if (timeLeft <= 0) endGame();
   }, 1000);
 
   showBox();
 }
 
-function endGame() {
-  gameRunning = false;
-  gameRunning = false;
-  box.style.display = "none";
-  clearInterval(timerInterval);
-  alert("انتهى الوقت! نقاطك: " + score);
+// ===== إظهار المربع =====
+function getRandomColor() {
+  // يولد لون HEX عشوائي
+  let letters = "0123456789ABCDEF";
+  let color = "#";
+  for (let i = 0; i < 6; i++) {
+    color += letters[Math.floor(Math.random() * 16)];
+  }
+  return color;
 }
 
 function showBox() {
   if (!gameRunning) return;
 
   let x = Math.random() * (window.innerWidth - 100);
-  let y = Math.random() * (window.innerHeight - 100);
+  let y = Math.random() * (window.innerHeight - 150);
 
   box.style.left = x + "px";
   box.style.top = y + "px";
+  
+  box.style.background = getRandomColor();  //ibadal lon
   box.style.display = "block";
 
-  setTimeout(() => {
+  boxTimeout = setTimeout(() => {
     box.style.display = "none";
-    speed -= 0.95;
-    if (speed < 500) speed = 500;
+    speed -= 20;          // سرعة أخف لتسهيل اللعبة تدريجيًا
+    if (speed < 800) speed = 800; // الحد الأدنى للسرعة
     showBox();
   }, speed);
 }
 
+// ===== عند النقر على المربع =====
 box.onclick = function () {
   if (!gameRunning) return;
+  clickSound.currentTime = 0;
+  clickSound.play();
+
   score++;
   document.getElementById("score").innerText = "النقاط: " + score;
 };
 
-document.getElementById("startBtn").onclick = startGame;
-document.getElementById("restartBtn").onclick = startGame;
+// ===== نهاية اللعبة =====
+function endGame() {
+  gameRunning = false;
+  box.style.display = "none";
+
+  clearInterval(timerInterval);
+  clearTimeout(boxTimeout);
+
+  alert("⏰ انتهى الوقت!\nنقاطك: " + score);
+}
+
+// ===== أزرار =====
+document.getElementById("startBtn").onclick = startWithSound;
+document.getElementById("restartBtn").onclick = startWithSound;
+document.getElementById("stopBtn").onclick = function() {
+  if (!gameRunning) return; // إذا اللعبة مش شغالة، ما يعمل شيء
+  gameRunning = false;
+  box.style.display = "none";   // إخفاء المربع
+  clearInterval(timerInterval);  // إيقاف العد التنازلي
+  clearTimeout(boxTimeout);      // إيقاف ظهور المربع
+  alert("🛑 تم إيقاف اللعبة!\nنقاطك: " + score);
+};
+
 </script>
 
 </body>
 </html>
+
