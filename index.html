@@ -6,11 +6,20 @@
 
 <style>
 body {
-  font-family: Arial;
+  font-family: Arial, sans-serif;
+  background: url("khalfeya.jpg") no-repeat center center fixed;
+  background-size: cover;
+  color: lch(100% 0.01 296.81);
   text-align: center;
-  background: #f2f2f2;
+  padding-top: 50px;
   margin: 0;
-  overflow: hidden;
+}
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: -1;
 }
 
 #box {
@@ -144,7 +153,7 @@ function showBox() {
 
   box.style.left = x + "px";
   box.style.top = y + "px";
-  
+
   box.style.background = getRandomColor();  //ibadal lon
   box.style.display = "block";
 
