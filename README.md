@@ -3,7 +3,7 @@
 <html lang="ar">
 <head>
 <meta charset="UTF-8">
-<title>لعبة النقر السريع</title>
+<title></title> Quick Tap Challenge </title>
 
 <style>
 body {
