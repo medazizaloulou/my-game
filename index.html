@@ -2,7 +2,7 @@
 <html lang="ar">
 <head>
 <meta charset="UTF-8">
-<title>لعبة النقر السريع</title>
+<title>لعبة النقر السريع - نسخة متقدمة</title>
 
 <style>
 body {
@@ -60,7 +60,7 @@ button {
   border-radius: 10px;
 }
 
-/* 🏆 صندوق أعلى نقطة */
+/* 🏆 أعلى نقطة */
 .high-score-box {
   position: fixed;
   top: 15px;
@@ -75,10 +75,28 @@ button {
   transition: 0.3s;
 }
 
-/* ✨ تأثير عند كسر الرقم */
 .high-score-box.animate {
   transform: scale(1.2);
   box-shadow: 0 0 25px gold;
+}
+
+/* 📝 لوحة أعلى 5 نقاط */
+#leaderboard {
+  position: fixed;
+  top: 60px;
+  right: 20px;
+  width: 180px;
+  background: rgba(0,0,0,0.6);
+  border-radius: 10px;
+  padding: 10px;
+  text-align: left;
+  font-size: 16px;
+}
+
+#leaderboard h3 {
+  text-align: center;
+  margin: 0 0 5px 0;
+  font-size: 18px;
 }
 </style>
 </head>
@@ -86,6 +104,11 @@ button {
 <body>
 
 <p id="highScore" class="high-score-box">🏆 أعلى نقطة: 0</p>
+
+<div id="leaderboard">
+  <h3>🏅 أفضل 5</h3>
+  <ol id="topScores"></ol>
+</div>
 
 <h1>🎮 العب فورًا</h1>
 <p id="score">النقاط: 0</p>
@@ -102,32 +125,34 @@ button {
 <div id="box"></div>
 
 <script>
-
 // ===== الأصوات =====
 let clickSound = new Audio("click.mp3");
 let startSound = new Audio("start.mp3");
 
 // ===== المتغيرات =====
 let score = 0;
-let speed = 2500; // 🐢 بطيئة
+let speed = 2500;
 let timeLeft = 30;
 let totalTime = 30;
 let gameRunning = false;
 let timerInterval;
 let boxTimeout;
 
+// أعلى نقطة عامة
 let highScore = localStorage.getItem("highScore") || 0;
+let leaderboard = JSON.parse(localStorage.getItem("leaderboard")) || [];
 
 let box = document.getElementById("box");
 let timeBar = document.getElementById("timeBar");
 let highScoreElement = document.getElementById("highScore");
+let topScoresElement = document.getElementById("topScores");
 
 highScoreElement.innerText = "🏆 أعلى نقطة: " + highScore;
+renderLeaderboard();
 
 // ===== بدء اللعبة مع صوت =====
 function startWithSound() {
   document.getElementById("startBtn").style.display = "none";
-
   startSound.currentTime = 0;
   startSound.play();
 
@@ -153,13 +178,11 @@ function startGame() {
 
   timerInterval = setInterval(() => {
     if (!gameRunning) return;
-
     timeLeft--;
     document.getElementById("timer").innerText = "الوقت: " + timeLeft;
     timeBar.style.width = (timeLeft / totalTime * 100) + "%";
 
     if (timeLeft <= 0) endGame();
-
   }, 1000);
 
   showBox();
@@ -169,8 +192,8 @@ function startGame() {
 function getRandomColor() {
   let letters = "0123456789ABCDEF";
   let color = "#";
-  for (let i = 0; i < 6; i++) {
-    color += letters[Math.floor(Math.random() * 16)];
+  for (let i=0;i<6;i++){
+    color += letters[Math.floor(Math.random()*16)];
   }
   return color;
 }
@@ -179,12 +202,12 @@ function getRandomColor() {
 function showBox() {
   if (!gameRunning) return;
 
-  let size = Math.random() * 60 + 40;
+  let size = Math.random()*60 + 40;
   box.style.width = size + "px";
   box.style.height = size + "px";
 
-  let x = Math.random() * (window.innerWidth - size);
-  let y = Math.random() * (window.innerHeight - 200);
+  let x = Math.random()*(window.innerWidth - size);
+  let y = Math.random()*(window.innerHeight - 200);
 
   box.style.left = x + "px";
   box.style.top = y + "px";
@@ -192,77 +215,96 @@ function showBox() {
   box.style.background = getRandomColor();
   box.style.display = "block";
 
-  boxTimeout = setTimeout(() => {
-    box.style.display = "none";
-
-    speed = 2500 - (score * 20);
-    if (speed < 1500) speed = 1500;
-
+  boxTimeout = setTimeout(()=>{
+    box.style.display="none";
+    speed = 2500 - (score*20);
+    if(speed < 1500) speed = 1500;
     showBox();
-
   }, speed);
 }
 
 // ===== عند الضغط =====
-box.onclick = function () {
-  if (!gameRunning) return;
-
-  clickSound.currentTime = 0;
+box.onclick = function(){
+  if(!gameRunning) return;
+  clickSound.currentTime=0;
   clickSound.play();
 
   score++;
-  document.getElementById("score").innerText =
-  "النقاط: " + score;
+  document.getElementById("score").innerText = "النقاط: "+score;
 
   box.style.display = "none";
   clearTimeout(boxTimeout);
   showBox();
-};
+}
 
 // ===== نهاية اللعبة =====
-function endGame() {
-  gameRunning = false;
-  box.style.display = "none";
-
+function endGame(){
+  gameRunning=false;
+  box.style.display="none";
   clearInterval(timerInterval);
   clearTimeout(boxTimeout);
 
-  if (score > highScore) {
+  // تحديث أعلى نقطة إذا كان جديد
+  let newRecord=false;
+  if(score > highScore){
     highScore = score;
     localStorage.setItem("highScore", highScore);
-
-    highScoreElement.innerText =
-    "🏆 أعلى نقطة: " + highScore;
+    highScoreElement.innerText = "🏆 أعلى نقطة: "+highScore;
 
     // ✨ تأثير احترافي
     highScoreElement.classList.add("animate");
-    setTimeout(() => {
-      highScoreElement.classList.remove("animate");
-    }, 600);
+    setTimeout(()=>{highScoreElement.classList.remove("animate");},600);
 
-    alert("🏆 رقم قياسي جديد!\nنقاطك: " + score);
+    newRecord=true;
+  }
+
+  // تحديث لوحة أفضل 5
+  updateLeaderboard(score);
+
+  if(newRecord){
+    alert("🏆 رقم قياسي جديد!\nنقاطك: "+score);
   } else {
-    alert("⏰ انتهى الوقت!\nنقاطك: " + score);
+    alert("⏰ انتهى الوقت!\nنقاطك: "+score);
   }
 }
 
+// ===== لوحة أعلى 5 نقاط =====
+function updateLeaderboard(score){
+  leaderboard.push(score);
+  leaderboard.sort((a,b)=>b-a); // ترتيب تنازلي
+  if(leaderboard.length>5) leaderboard.pop(); // فقط أفضل 5
+  localStorage.setItem("leaderboard", JSON.stringify(leaderboard));
+  renderLeaderboard();
+}
+
+// ===== عرض لوحة أفضل 5 =====
+function renderLeaderboard(){
+  topScoresElement.innerHTML="";
+  leaderboard.forEach((s,i)=>{
+    let icon="";
+    if(i==0) icon="👑";
+    else if(i==1) icon="🥇";
+    else if(i==2) icon="🥈";
+    else if(i==3) icon="🥉";
+    else icon="⭐";
+    let li=document.createElement("li");
+    li.innerText=icon + " " + s;
+    topScoresElement.appendChild(li);
+  });
+}
+
 // ===== الأزرار =====
-document.getElementById("startBtn").onclick = startWithSound;
-document.getElementById("restartBtn").onclick = startWithSound;
+document.getElementById("startBtn").onclick=startWithSound;
+document.getElementById("restartBtn").onclick=startWithSound;
 
-document.getElementById("stopBtn").onclick = function() {
-  if (!gameRunning) return;
-
-  gameRunning = false;
-  box.style.display = "none";
-
+document.getElementById("stopBtn").onclick=function(){
+  if(!gameRunning) return;
+  gameRunning=false;
+  box.style.display="none";
   clearInterval(timerInterval);
   clearTimeout(boxTimeout);
-
-  alert("🛑 تم إيقاف اللعبة!\nنقاطك: " + score);
-};
-
+  alert("🛑 تم إيقاف اللعبة!\nنقاطك: "+score);
+}
 </script>
-
 </body>
 </html>
