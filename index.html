@@ -9,11 +9,12 @@ body {
   font-family: Arial, sans-serif;
   background: url("khalfeya.jpg") no-repeat center center fixed;
   background-size: cover;
-  color: lch(100% 0.01 296.81);
+  color: white;
   text-align: center;
   padding-top: 50px;
   margin: 0;
 }
+
 body::before {
   content: "";
   position: fixed;
@@ -30,6 +31,11 @@ body::before {
   display: none;
   cursor: pointer;
   border-radius: 10px;
+}
+
+#box:active {
+  transform: scale(0.9);
+  transition: 0.1s;
 }
 
 button {
@@ -53,10 +59,33 @@ button {
   background: red;
   border-radius: 10px;
 }
+
+/* 🏆 صندوق أعلى نقطة */
+.high-score-box {
+  position: fixed;
+  top: 15px;
+  right: 20px;
+  font-size: 18px;
+  font-weight: bold;
+  background: linear-gradient(45deg, gold, orange);
+  color: black;
+  padding: 10px 18px;
+  border-radius: 12px;
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.7);
+  transition: 0.3s;
+}
+
+/* ✨ تأثير عند كسر الرقم */
+.high-score-box.animate {
+  transform: scale(1.2);
+  box-shadow: 0 0 25px gold;
+}
 </style>
 </head>
 
 <body>
+
+<p id="highScore" class="high-score-box">🏆 أعلى نقطة: 0</p>
 
 <h1>🎮 العب فورًا</h1>
 <p id="score">النقاط: 0</p>
@@ -70,47 +99,47 @@ button {
 <button id="restartBtn" style="display:none;">إعادة اللعب</button>
 <button id="stopBtn">إيقاف اللعبة</button>
 
-
 <div id="box"></div>
 
 <script>
+
 // ===== الأصوات =====
 let clickSound = new Audio("click.mp3");
-clickSound.preload = "auto";
-
 let startSound = new Audio("start.mp3");
-startSound.preload = "auto";
 
-// ===== متغيرات اللعبة =====
+// ===== المتغيرات =====
 let score = 0;
-let speed = 1500; // سرعة أسهل للمربع
+let speed = 2500; // 🐢 بطيئة
 let timeLeft = 30;
 let totalTime = 30;
 let gameRunning = false;
 let timerInterval;
 let boxTimeout;
 
+let highScore = localStorage.getItem("highScore") || 0;
+
 let box = document.getElementById("box");
 let timeBar = document.getElementById("timeBar");
+let highScoreElement = document.getElementById("highScore");
 
-// ===== بدء اللعبة بعد صوت البداية (4 ثواني) =====
+highScoreElement.innerText = "🏆 أعلى نقطة: " + highScore;
+
+// ===== بدء اللعبة مع صوت =====
 function startWithSound() {
   document.getElementById("startBtn").style.display = "none";
 
-  // 🔊 شغل صوت البداية
   startSound.currentTime = 0;
   startSound.play();
 
-  // 🕒 انتظر 4 ثواني قبل بدء اللعبة
   setTimeout(() => {
     startGame();
-  }, 4000); // التأخير 4 ثواني
+  }, 4000);
 }
 
 // ===== بدء اللعبة =====
 function startGame() {
   score = 0;
-  speed = 1500; // سرعة المربع
+  speed = 2500;
   timeLeft = totalTime;
   gameRunning = true;
 
@@ -124,19 +153,20 @@ function startGame() {
 
   timerInterval = setInterval(() => {
     if (!gameRunning) return;
+
     timeLeft--;
     document.getElementById("timer").innerText = "الوقت: " + timeLeft;
     timeBar.style.width = (timeLeft / totalTime * 100) + "%";
 
     if (timeLeft <= 0) endGame();
+
   }, 1000);
 
   showBox();
 }
 
-// ===== إظهار المربع =====
+// ===== لون عشوائي =====
 function getRandomColor() {
-  // يولد لون HEX عشوائي
   let letters = "0123456789ABCDEF";
   let color = "#";
   for (let i = 0; i < 6; i++) {
@@ -145,34 +175,48 @@ function getRandomColor() {
   return color;
 }
 
+// ===== إظهار المربع =====
 function showBox() {
   if (!gameRunning) return;
 
-  let x = Math.random() * (window.innerWidth - 100);
-  let y = Math.random() * (window.innerHeight - 150);
+  let size = Math.random() * 60 + 40;
+  box.style.width = size + "px";
+  box.style.height = size + "px";
+
+  let x = Math.random() * (window.innerWidth - size);
+  let y = Math.random() * (window.innerHeight - 200);
 
   box.style.left = x + "px";
   box.style.top = y + "px";
 
-  box.style.background = getRandomColor();  //ibadal lon
+  box.style.background = getRandomColor();
   box.style.display = "block";
 
   boxTimeout = setTimeout(() => {
     box.style.display = "none";
-    speed -= 20;          // سرعة أخف لتسهيل اللعبة تدريجيًا
-    if (speed < 800) speed = 800; // الحد الأدنى للسرعة
+
+    speed = 2500 - (score * 20);
+    if (speed < 1500) speed = 1500;
+
     showBox();
+
   }, speed);
 }
 
-// ===== عند النقر على المربع =====
+// ===== عند الضغط =====
 box.onclick = function () {
   if (!gameRunning) return;
+
   clickSound.currentTime = 0;
   clickSound.play();
 
   score++;
-  document.getElementById("score").innerText = "النقاط: " + score;
+  document.getElementById("score").innerText =
+  "النقاط: " + score;
+
+  box.style.display = "none";
+  clearTimeout(boxTimeout);
+  showBox();
 };
 
 // ===== نهاية اللعبة =====
@@ -183,18 +227,38 @@ function endGame() {
   clearInterval(timerInterval);
   clearTimeout(boxTimeout);
 
-  alert("⏰ انتهى الوقت!\nنقاطك: " + score);
+  if (score > highScore) {
+    highScore = score;
+    localStorage.setItem("highScore", highScore);
+
+    highScoreElement.innerText =
+    "🏆 أعلى نقطة: " + highScore;
+
+    // ✨ تأثير احترافي
+    highScoreElement.classList.add("animate");
+    setTimeout(() => {
+      highScoreElement.classList.remove("animate");
+    }, 600);
+
+    alert("🏆 رقم قياسي جديد!\nنقاطك: " + score);
+  } else {
+    alert("⏰ انتهى الوقت!\nنقاطك: " + score);
+  }
 }
 
-// ===== أزرار =====
+// ===== الأزرار =====
 document.getElementById("startBtn").onclick = startWithSound;
 document.getElementById("restartBtn").onclick = startWithSound;
+
 document.getElementById("stopBtn").onclick = function() {
-  if (!gameRunning) return; // إذا اللعبة مش شغالة، ما يعمل شيء
+  if (!gameRunning) return;
+
   gameRunning = false;
-  box.style.display = "none";   // إخفاء المربع
-  clearInterval(timerInterval);  // إيقاف العد التنازلي
-  clearTimeout(boxTimeout);      // إيقاف ظهور المربع
+  box.style.display = "none";
+
+  clearInterval(timerInterval);
+  clearTimeout(boxTimeout);
+
   alert("🛑 تم إيقاف اللعبة!\nنقاطك: " + score);
 };
 
@@ -202,4 +266,3 @@ document.getElementById("stopBtn").onclick = function() {
 
 </body>
 </html>
-
