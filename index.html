@@ -24,19 +24,12 @@ body::before {
 }
 
 #box {
-  width: 80px;
-  height: 80px;
-  background: red;
   position: absolute;
   display: none;
   cursor: pointer;
   border-radius: 10px;
 }
-
-#box:active {
-  transform: scale(0.9);
-  transition: 0.1s;
-}
+#box:active { transform: scale(0.9); transition:0.1s; }
 
 button {
   margin: 5px;
@@ -52,15 +45,8 @@ button {
   margin: 10px auto;
   border-radius: 10px;
 }
+#timeBar { height:100%; width:100%; background:red; border-radius:10px; }
 
-#timeBar {
-  height: 100%;
-  width: 100%;
-  background: red;
-  border-radius: 10px;
-}
-
-/* 🏆 أعلى نقطة */
 .high-score-box {
   position: fixed;
   top: 15px;
@@ -71,48 +57,45 @@ button {
   color: black;
   padding: 10px 18px;
   border-radius: 12px;
-  box-shadow: 0 0 10px rgba(255, 215, 0, 0.7);
-  transition: 0.3s;
+  box-shadow: 0 0 10px rgba(255,215,0,0.7);
+  transition:0.3s;
 }
+.high-score-box.animate { transform: scale(1.2); box-shadow:0 0 25px gold; }
 
-.high-score-box.animate {
-  transform: scale(1.2);
-  box-shadow: 0 0 25px gold;
-}
-
-/* 📝 لوحة أعلى 5 نقاط */
 #leaderboard {
   position: fixed;
   top: 60px;
   right: 20px;
   width: 180px;
   background: rgba(0,0,0,0.6);
-  border-radius: 10px;
-  padding: 10px;
-  text-align: left;
-  font-size: 16px;
+  border-radius:10px;
+  padding:10px;
+  text-align:left;
+  font-size:16px;
 }
-
-#leaderboard h3 {
-  text-align: center;
-  margin: 0 0 5px 0;
-  font-size: 18px;
-}
+#leaderboard h3 { text-align:center; margin:0 0 5px 0; font-size:18px; }
 </style>
 </head>
 
 <body>
 
 <p id="highScore" class="high-score-box">🏆 أعلى نقطة: 0</p>
-
-<div id="leaderboard">
-  <h3>🏅 أفضل 5</h3>
   <ol id="topScores"></ol>
 </div>
 
 <h1>🎮 العب فورًا</h1>
 <p id="score">النقاط: 0</p>
 <p id="timer">الوقت: 30</p>
+
+<div>
+<p>اختر وضع اللعبة:</p>
+<select id="difficultySelect">
+  <option value="slow">🐢 بطيء</option>
+  <option value="normal" selected>⚡ عادي</option>
+  <option value="hard">🔥 صعب</option>
+  <option value="insane">💥 مجنون</option>
+</select>
+</div>
 
 <div id="timeBarContainer">
   <div id="timeBar"></div>
@@ -131,14 +114,13 @@ let startSound = new Audio("start.mp3");
 
 // ===== المتغيرات =====
 let score = 0;
-let speed = 2500;
+let speed = 2000; // سرعة البداية، تتغير حسب الوضع
 let timeLeft = 30;
 let totalTime = 30;
 let gameRunning = false;
 let timerInterval;
 let boxTimeout;
 
-// أعلى نقطة عامة
 let highScore = localStorage.getItem("highScore") || 0;
 let leaderboard = JSON.parse(localStorage.getItem("leaderboard")) || [];
 
@@ -147,156 +129,121 @@ let timeBar = document.getElementById("timeBar");
 let highScoreElement = document.getElementById("highScore");
 let topScoresElement = document.getElementById("topScores");
 
+let difficulty = "normal";
+
 highScoreElement.innerText = "🏆 أعلى نقطة: " + highScore;
 renderLeaderboard();
 
-// ===== بدء اللعبة مع صوت =====
-function startWithSound() {
-  document.getElementById("startBtn").style.display = "none";
-  startSound.currentTime = 0;
-  startSound.play();
+document.getElementById("difficultySelect").onchange = function() {
+  difficulty = this.value;
+};
 
-  setTimeout(() => {
-    startGame();
-  }, 4000);
+function startWithSound() {
+  document.getElementById("startBtn").style.display="none";
+  startSound.currentTime=0; startSound.play();
+  setTimeout(()=>{ startGame(); },4000);
 }
 
-// ===== بدء اللعبة =====
-function startGame() {
-  score = 0;
-  speed = 2500;
-  timeLeft = totalTime;
-  gameRunning = true;
+function startGame(){
+  score=0;
+  timeLeft=totalTime;
+  gameRunning=true;
 
-  document.getElementById("score").innerText = "النقاط: 0";
-  document.getElementById("timer").innerText = "الوقت: " + timeLeft;
-  timeBar.style.width = "100%";
+  document.getElementById("score").innerText="النقاط: 0";
+  document.getElementById("timer").innerText="الوقت: "+timeLeft;
+  timeBar.style.width="100%";
 
-  document.getElementById("restartBtn").style.display = "inline-block";
+  document.getElementById("restartBtn").style.display="inline-block";
+
+  // تحديد سرعة البداية حسب الوضع
+  switch(difficulty){
+    case "slow": speed=2500; break;
+    case "normal": speed=2000; break;
+    case "hard": speed=1500; break;
+    case "insane": speed=1000; break;
+  }
 
   clearInterval(timerInterval);
-
-  timerInterval = setInterval(() => {
-    if (!gameRunning) return;
+  timerInterval=setInterval(()=>{
+    if(!gameRunning) return;
     timeLeft--;
-    document.getElementById("timer").innerText = "الوقت: " + timeLeft;
-    timeBar.style.width = (timeLeft / totalTime * 100) + "%";
-
-    if (timeLeft <= 0) endGame();
-  }, 1000);
+    document.getElementById("timer").innerText="الوقت: "+timeLeft;
+    timeBar.style.width=(timeLeft/totalTime*100)+"%";
+    if(timeLeft<=0) endGame();
+  },1000);
 
   showBox();
 }
 
-// ===== لون عشوائي =====
-function getRandomColor() {
-  let letters = "0123456789ABCDEF";
-  let color = "#";
-  for (let i=0;i<6;i++){
-    color += letters[Math.floor(Math.random()*16)];
-  }
+function getRandomColor(){
+  let letters="0123456789ABCDEF", color="#";
+  for(let i=0;i<6;i++) color += letters[Math.floor(Math.random()*16)];
   return color;
 }
 
-// ===== إظهار المربع =====
-function showBox() {
-  if (!gameRunning) return;
-
-  let size = Math.random()*60 + 40;
-  box.style.width = size + "px";
-  box.style.height = size + "px";
+function showBox(){
+  if(!gameRunning) return;
+  // حجم المربع حسب الوضع
+  let baseSize = (difficulty=="slow")?80:(difficulty=="normal"?60:(difficulty=="hard"?50:40));
+  let size = Math.random()*20 + baseSize;
+  box.style.width=size+"px";
+  box.style.height=size+"px";
 
   let x = Math.random()*(window.innerWidth - size);
   let y = Math.random()*(window.innerHeight - 200);
 
-  box.style.left = x + "px";
-  box.style.top = y + "px";
+  box.style.left=x+"px";
+  box.style.top=y+"px";
+  box.style.background=getRandomColor();
+  box.style.display="block";
 
-  box.style.background = getRandomColor();
-  box.style.display = "block";
+  // تسارع ديناميكي: كل 5 نقاط يصبح أسرع
+  let currentSpeed = speed - Math.floor(score/5)*100;
+  if(currentSpeed<500) currentSpeed=500;
 
-  boxTimeout = setTimeout(()=>{
+  boxTimeout=setTimeout(()=>{
     box.style.display="none";
-    speed = 2500 - (score*20);
-    if(speed < 1500) speed = 1500;
     showBox();
-  }, speed);
+  },currentSpeed);
 }
 
-// ===== عند الضغط =====
-box.onclick = function(){
+box.onclick=function(){
   if(!gameRunning) return;
-  clickSound.currentTime=0;
-  clickSound.play();
-
+  clickSound.currentTime=0; clickSound.play();
   score++;
-  document.getElementById("score").innerText = "النقاط: "+score;
+  document.getElementById("score").innerText="النقاط: "+score;
 
-  box.style.display = "none";
+  box.style.display="none";
   clearTimeout(boxTimeout);
   showBox();
 }
 
-// ===== نهاية اللعبة =====
 function endGame(){
   gameRunning=false;
   box.style.display="none";
   clearInterval(timerInterval);
   clearTimeout(boxTimeout);
 
-  // تحديث أعلى نقطة إذا كان جديد
   let newRecord=false;
-  if(score > highScore){
-    highScore = score;
-    localStorage.setItem("highScore", highScore);
-    highScoreElement.innerText = "🏆 أعلى نقطة: "+highScore;
-
-    // ✨ تأثير احترافي
+  if(score>highScore){
+    highScore=score;
+    localStorage.setItem("highScore",highScore);
+    highScoreElement.innerText="🏆 أعلى نقطة: "+highScore;
     highScoreElement.classList.add("animate");
-    setTimeout(()=>{highScoreElement.classList.remove("animate");},600);
-
+    setTimeout(()=>{ highScoreElement.classList.remove("animate"); },600);
     newRecord=true;
   }
 
-  // تحديث لوحة أفضل 5
   updateLeaderboard(score);
 
-  if(newRecord){
-    alert("🏆 رقم قياسي جديد!\nنقاطك: "+score);
-  } else {
-    alert("⏰ انتهى الوقت!\nنقاطك: "+score);
-  }
+  if(newRecord) alert("🏆 رقم قياسي جديد!\nنقاطك: "+score);
+  else alert("⏰ انتهى الوقت!\nنقاطك: "+score);
 }
 
-// ===== لوحة أعلى 5 نقاط =====
-function updateLeaderboard(score){
-  leaderboard.push(score);
-  leaderboard.sort((a,b)=>b-a); // ترتيب تنازلي
-  if(leaderboard.length>5) leaderboard.pop(); // فقط أفضل 5
-  localStorage.setItem("leaderboard", JSON.stringify(leaderboard));
-  renderLeaderboard();
-}
-
-// ===== عرض لوحة أفضل 5 =====
-function renderLeaderboard(){
-  topScoresElement.innerHTML="";
-  leaderboard.forEach((s,i)=>{
-    let icon="";
-    if(i==0) icon="👑";
-    else if(i==1) icon="🥇";
-    else if(i==2) icon="🥈";
-    else if(i==3) icon="🥉";
-    else icon="⭐";
-    let li=document.createElement("li");
-    li.innerText=icon + " " + s;
-    topScoresElement.appendChild(li);
-  });
-}
 
 // ===== الأزرار =====
 document.getElementById("startBtn").onclick=startWithSound;
 document.getElementById("restartBtn").onclick=startWithSound;
-
 document.getElementById("stopBtn").onclick=function(){
   if(!gameRunning) return;
   gameRunning=false;
